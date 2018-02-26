@@ -142,6 +142,18 @@ namespace ScriptEngine.Machine.Contexts
 
         protected override IValue GetOwnPropValue(int index)
         {
+            if(index == 0)
+            {
+                var methId = GetScriptMethod("ОбработкаПолученияПредставления", "PresentationGetProcessing");
+
+                if (methId > -1)
+                {
+                    CallAsFunction(methId, new IValue[0], out IValue presentation);
+                    if (!String.IsNullOrEmpty(presentation?.AsString()))
+                        return presentation; 
+                }
+                    
+            }
             return _ownProperties[index];
         }
 
