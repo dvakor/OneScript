@@ -4,6 +4,7 @@ Mozilla Public License, v.2.0. If a copy of the MPL
 was not distributed with this file, You can obtain one 
 at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------*/
+using ScriptEngine.Machine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,11 @@ namespace OneScript.DebugProtocol
         [DataMember]
         public string TypeName { get; set; }
 
+        [DataMember]
+        public List<Variable> ChildVariables { get; set; }
+
         public int ChildrenHandleID { get; set; }
+
+        
     }
 }

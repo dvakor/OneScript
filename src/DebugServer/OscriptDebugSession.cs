@@ -26,11 +26,13 @@ namespace DebugServer
         private bool _startupPerformed = false;
         private readonly Handles<OneScript.DebugProtocol.StackFrame> _framesHandles;
         private readonly Handles<IVariableLocator> _variableHandles;
+        private readonly Dictionary<int, List<OneScript.DebugProtocol.Variable>> _watchVars;
 
         public OscriptDebugSession() : base(true, false)
         {
             _framesHandles = new Handles<OneScript.DebugProtocol.StackFrame>();
             _variableHandles = new Handles<IVariableLocator>();
+            _watchVars = new Dictionary<int, List<OneScript.DebugProtocol.Variable>>();
         }
         
         public override void Initialize(Response response, dynamic args)
@@ -367,9 +369,14 @@ namespace DebugServer
 
             _process.FillVariables(variables);
 
-            var responseArray = new VSCodeDebug.Variable[variables.Count];
+            int varsCount = variables.Count;
 
-            for (int i = 0; i < responseArray.Length; i++)
+            if (_watchVars.ContainsKey(varsHandle))
+                varsCount += _watchVars[varsHandle].Count;
+
+            var responseArray = new VSCodeDebug.Variable[varsCount];
+
+            for (int i = 0; i < variables.Count; i++)
             {
                 var variable = variables[i];
 
@@ -383,6 +390,21 @@ namespace DebugServer
                     variable.Presentation,
                     variable.TypeName,
                     variable.ChildrenHandleID);
+            }
+
+            if(_watchVars.ContainsKey(varsHandle))
+            {
+                var vars = _watchVars[varsHandle];
+                for (int i = 0; i < vars.Count; i++)
+                {
+                    var localVar = vars[i];
+
+                    responseArray[i + variables.Count] = new VSCodeDebug.Variable(
+                        localVar.Name,
+                        localVar.Presentation,
+                        localVar.TypeName,
+                        localVar.ChildrenHandleID);
+                }
             }
 
             SendResponse(response, new VariablesResponseBody(responseArray));
@@ -422,16 +444,25 @@ namespace DebugServer
             }
 
             OneScript.DebugProtocol.Variable evalResult;
+            int refId = 0;
+            int childVarsCount = 0;
             try
             {
                 evalResult = _process.Evaluate(frame, expression);
+                var t = new VariableLocator(frameId);
+                refId = _variableHandles.Create(t);
+                childVarsCount = evalResult.ChildVariables.Count;
+                _watchVars[refId] = evalResult.ChildVariables;
             }
             catch (Exception e)
             {
                 evalResult = new OneScript.DebugProtocol.Variable() { Presentation = e.Message };
             }
 
-            var protResult = new EvaluateResponseBody(evalResult.Presentation) {type = evalResult.TypeName};
+            var protResult = new EvaluateResponseBody(evalResult.Presentation, refId) {
+                type = evalResult.TypeName,
+                namedVariables = childVarsCount
+            };
             SendResponse(response, protResult);
         }
 

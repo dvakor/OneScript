@@ -5,17 +5,17 @@ chcp 866 > nul
 setlocal
 set pathdir=%~dp0
 
-rem echo сами тесты %CD%
-rem echo скрипты тестирования %pathdir%
+rem echo самя┐╜ я┐╜я┐╜я┐╜я┐╜ %CD%
+rem echo я┐╜рипя┐╜я┐╜ я┐╜я┐╜я┐╜ровя┐╜я┐╜я┐╜я┐╜ %pathdir%
 
 set progfiles=%ProgramFiles(x86)%
 if NOT EXIST ProgramFiles(x86) set progfiles=%ProgramFiles%
 
 @echo on
-"%progfiles%\OneScript\bin\oscript.exe" "%pathdir%testrunner.os" -runall %1 %2 %3 %4 %5
+"D:\WorkFolders\d.korolev\git\OneScript\src\oscript\bin\x86\Debug\net452\oscript.exe" "%pathdir%testrunner.os" -runall %1 %2 %3 %4 %5
 @echo off
 
-rem echo Код возврата %ERRORLEVEL%
+rem echo я┐╜я┐╜я┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜я┐╜ %ERRORLEVEL%
 if %ERRORLEVEL%==2 GOTO pending_exit
 if NOT %ERRORLEVEL%==0 GOTO bad_exit
 
@@ -30,9 +30,9 @@ exit /B 2
 :bad_exit
 if "-1"=="%success%" GOTO success_exit
 echo .
-echo Несколько тестов упали
-echo Неудача.  Красная полоса
-echo    Упавщие тесты:
+echo я┐╜я┐╜скоя┐╜ько я┐╜я┐╜тов упая┐╜я┐╜
+echo я┐╜я┐╜удая┐╜.  я┐╜я┐╜сная┐╜ я┐╜я┐╜я┐╜я┐╜я┐╜
+echo    я┐╜я┐╜я┐╜я┐╜щие я┐╜я┐╜я┐╜я┐╜:
 type %logfile%
 
 if ".%1"=="." pause

@@ -243,10 +243,13 @@ namespace VSCodeDebug
 
         public int variablesReference { get; }
 
+        public int? namedVariables { get; set; }
 
-		public EvaluateResponseBody(string value, int reff = 0) {
+        public int? indexedVariables { get; }
+
+        public EvaluateResponseBody(string value, int reff = 0) {
 			result = value;
-			variablesReference = reff;
+            variablesReference = reff;
 		}
 	}
 

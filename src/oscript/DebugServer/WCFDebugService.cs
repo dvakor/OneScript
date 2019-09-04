@@ -162,20 +162,14 @@ namespace oscript.DebugServer
             try
             {
                 var value = GetMachine(threadId).Evaluate(expression, true);
-                return new Variable()
-                {
-                    Name = "$evalResult",
-                    Presentation = value.AsString(),
-                    TypeName = value.SystemType.Name,
-                    IsStructured = HasProperties(value)
-                };
+                return GetVariable(value);
             }
             catch (ScriptException e)
             {
                 return new Variable()
                 {
                     Name = "$evalFault",
-                    Presentation = e.ErrorDescription,
+                    Presentation = e.ErrorDescription + e.StackTrace,
                     TypeName = "Ошибка",
                     IsStructured = false
                 };
@@ -211,6 +205,33 @@ namespace oscript.DebugServer
         private MachineInstance GetMachine(int threadId)
         {
             return Controller.GetTokenForThread(threadId).Machine;
+        }
+
+        private Variable GetVariable(IValue value, string name = "$evalResult")
+        {
+            var variable = new Variable()
+            {
+                Name = name,
+                Presentation = value.AsString(),
+                TypeName = value.SystemType.Name,
+                IsStructured = HasProperties(value),
+            };
+            if (variable.IsStructured)
+                variable.ChildVariables = ChildVariables(value);
+            return variable;
+        }
+
+        private List<Variable> ChildVariables(IValue variable)
+        {
+            List<Variable> result = new List<Variable>();
+            var obj = variable.AsObject();
+            var props = obj.GetProperties();
+            foreach (var prop in props)
+            {
+                var propVal = obj.GetPropValue(prop.Index);
+                result.Add(GetVariable(propVal, prop.Identifier));
+            }
+            return result;
         }
 
         private static bool HasProperties(IValue variable)
