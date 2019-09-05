@@ -16,7 +16,7 @@ using OneScript.DebugProtocol;
 using OneScript.Language;
 using ScriptEngine;
 using ScriptEngine.Machine;
-
+using ScriptEngine.Machine.Contexts;
 using StackFrame = OneScript.DebugProtocol.StackFrame;
 using Variable = OneScript.DebugProtocol.Variable;
 
@@ -171,7 +171,8 @@ namespace oscript.DebugServer
                     Name = "$evalFault",
                     Presentation = e.ErrorDescription + e.StackTrace,
                     TypeName = "Ошибка",
-                    IsStructured = false
+                    IsStructured = false,
+                    IsIndexed = false
                 };
             }
         }
@@ -215,13 +216,45 @@ namespace oscript.DebugServer
                 Presentation = value.AsString(),
                 TypeName = value.SystemType.Name,
                 IsStructured = HasProperties(value),
+                IsIndexed = IsIndexed(value)
             };
             if (variable.IsStructured)
-                variable.ChildVariables = ChildVariables(value);
+                variable.NamedVariables = NamedVariables(value);
+            if (variable.IsIndexed)
+                variable.IndexedVariables = IndexedVariables(value);
             return variable;
         }
 
-        private List<Variable> ChildVariables(IValue variable)
+        private bool IsIndexed(IValue value)
+        {
+            var rawObj = value.GetRawValue();
+            if (rawObj is IRuntimeContextInstance cntx)
+                return cntx.IsIndexed;
+            return false;
+        }
+
+        private List<Variable> IndexedVariables(IValue variable)
+        {
+            List<Variable> result = new List<Variable>();
+
+            var rawObj = variable.GetRawValue();
+
+            if (rawObj is IRuntimeContextInstance cntx)
+            {
+                if(rawObj is ICollectionContext collection)
+                {
+                    for (int i = 0; i < collection.Count(); i++)
+                    {
+                        var currentVal = cntx.GetIndexedValue(ValueFactory.Create(i));
+                        result.Add(GetVariable(currentVal, i.ToString()));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private List<Variable> NamedVariables(IValue variable)
         {
             List<Variable> result = new List<Variable>();
             var obj = variable.AsObject();
@@ -229,6 +262,14 @@ namespace oscript.DebugServer
             foreach (var prop in props)
             {
                 var propVal = obj.GetPropValue(prop.Index);
+                try
+                {
+                    var str = propVal.AsString();
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
                 result.Add(GetVariable(propVal, prop.Identifier));
             }
             return result;

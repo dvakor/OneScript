@@ -38,8 +38,6 @@ namespace oscript
 				returnCode = 1;
 			}
 
-            Console.ReadKey();
-
 			return returnCode;
 		}
 	}

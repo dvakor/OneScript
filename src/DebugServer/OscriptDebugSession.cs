@@ -445,14 +445,31 @@ namespace DebugServer
 
             OneScript.DebugProtocol.Variable evalResult;
             int refId = 0;
-            int childVarsCount = 0;
+            int namedVarsCount = 0;
+            int indexedVarsCount = 0;
             try
             {
                 evalResult = _process.Evaluate(frame, expression);
                 var t = new VariableLocator(frameId);
                 refId = _variableHandles.Create(t);
-                childVarsCount = evalResult.ChildVariables.Count;
-                _watchVars[refId] = evalResult.ChildVariables;
+                if(evalResult.NamedVariables != null)
+                {
+                    namedVarsCount = evalResult.NamedVariables.Count;
+                    _watchVars[refId] = evalResult.NamedVariables;
+                }
+                if(evalResult.IndexedVariables != null)
+                {
+                    indexedVarsCount = evalResult.IndexedVariables.Count;
+                    List<OneScript.DebugProtocol.Variable> list;
+                    if (_watchVars.ContainsKey(refId))
+                        list = _watchVars[refId];
+                    else
+                        list = new List<OneScript.DebugProtocol.Variable>();
+                    foreach (var item in evalResult.IndexedVariables)
+                    {
+                        list.Add(item);
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -461,7 +478,7 @@ namespace DebugServer
 
             var protResult = new EvaluateResponseBody(evalResult.Presentation, refId) {
                 type = evalResult.TypeName,
-                namedVariables = childVarsCount
+                namedVariables = namedVarsCount
             };
             SendResponse(response, protResult);
         }

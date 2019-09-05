@@ -23,13 +23,19 @@ namespace OneScript.DebugProtocol
         public bool IsStructured { get; set; }
 
         [DataMember]
+        public bool IsIndexed { get; set; }
+
+        [DataMember]
         public string Presentation { get; set; }
 
         [DataMember]
         public string TypeName { get; set; }
 
         [DataMember]
-        public List<Variable> ChildVariables { get; set; }
+        public List<Variable> NamedVariables { get; set; }
+
+        [DataMember]
+        public List<Variable> IndexedVariables { get; set; }
 
         public int ChildrenHandleID { get; set; }
 

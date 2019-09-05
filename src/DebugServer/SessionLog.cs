@@ -30,6 +30,7 @@ namespace DebugServer
 
         public static void WriteLine(string text)
         {
+            Console.WriteLine(text);
 #if DEBUG
             if (_log == null)
             {
