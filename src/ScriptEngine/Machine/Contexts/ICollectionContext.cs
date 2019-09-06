@@ -15,5 +15,6 @@ namespace ScriptEngine.Machine.Contexts
     {
         int Count();
         CollectionEnumerator GetManagedIterator();
+        //bool IsKeyValueAccessor { get; }
     }
 }

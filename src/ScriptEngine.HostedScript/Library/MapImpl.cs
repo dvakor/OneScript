@@ -35,6 +35,8 @@ namespace ScriptEngine.HostedScript.Library
             }
         }
 
+        public bool IsKeyValueAccessor => true;
+
         public override IValue GetIndexedValue(IValue index)
         {
             IValue result;

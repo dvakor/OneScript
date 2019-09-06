@@ -232,6 +232,8 @@ namespace ScriptEngine.HostedScript.Library.ValueTable
 
         private static readonly ContextMethodsMapper<ValueTableColumnCollection> _methods = new ContextMethodsMapper<ValueTableColumnCollection>();
 
+        public bool IsKeyValueAccessor => true;
+
         public override MethodInfo GetMethodInfo(int methodNumber)
         {
             return _methods.GetMethodInfo(methodNumber);

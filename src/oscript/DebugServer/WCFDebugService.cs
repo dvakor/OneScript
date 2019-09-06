@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 using OneScript.DebugProtocol;
 using OneScript.Language;
 using ScriptEngine;
+using ScriptEngine.HostedScript.Library;
+using ScriptEngine.HostedScript.Library.ValueTable;
 using ScriptEngine.Machine;
 using ScriptEngine.Machine.Contexts;
 using StackFrame = OneScript.DebugProtocol.StackFrame;
@@ -117,10 +119,12 @@ namespace oscript.DebugServer
         {
             var machine = Controller.GetTokenForThread(threadId).Machine;
             var locals = machine.GetFrameLocals(frameId);
+            //var _locals = new List<IVariable>();
             foreach (var step in path)
             {
                 var variable = locals[step];
-                if (HasProperties(variable))
+                bool hasProps = HasProperties(variable);
+                if (hasProps)
                 {
                     var obj = variable.AsObject();
                     locals = new List<IVariable>();
@@ -140,6 +144,37 @@ namespace oscript.DebugServer
 
                     }
                 }
+                //if (IsIndexed(variable))
+                //{
+                //    var obj = variable.AsObject();
+                //    if (obj is IRuntimeContextInstance cntx)
+                //    {
+                //        if (obj is ICollectionContext collection)
+                //        {
+                //            if(!hasProps)
+                //                locals = new List<IVariable>();
+                //            for (int i = 0; i < collection.Count(); i++)
+                //            {
+                //                try
+                //                {
+                //                    var currentVal = cntx.GetIndexedValue(ValueFactory.Create(i));
+                //                }
+                //                catch (Exception)
+                //                {
+                //                    break;
+                //                }
+                //                try
+                //                {
+                //                    locals.Add(ScriptEngine.Machine.Variable.Create(obj.GetPropValue(i), i.ToString()));
+                //                }
+                //                catch (Exception e)
+                //                {
+                //                    locals.Add(ScriptEngine.Machine.Variable.Create(ValueFactory.Create(e.Message), i.ToString()));
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
             }
 
             var result = new OneScript.DebugProtocol.Variable[locals.Count];
@@ -157,12 +192,21 @@ namespace oscript.DebugServer
             return result;
         }
 
+
+
         public Variable Evaluate(int threadId, int contextFrame, string expression)
         {
             try
             {
+               return new Variable()
+               {
+                    Name = "Test",
+                    IsStructured = true,
+                    Presentation = "Структура",
+                    TypeName = "Структура"
+               };
                 var value = GetMachine(threadId).Evaluate(expression, true);
-                return GetVariable(value);
+                //return GetVariable(value);
             }
             catch (ScriptException e)
             {
@@ -245,8 +289,19 @@ namespace oscript.DebugServer
                 {
                     for (int i = 0; i < collection.Count(); i++)
                     {
-                        var currentVal = cntx.GetIndexedValue(ValueFactory.Create(i));
-                        result.Add(GetVariable(currentVal, i.ToString()));
+                        try
+                        {
+                            var currentVal = cntx.GetIndexedValue(ValueFactory.Create(i));
+                            result.Add(GetVariable(currentVal, i.ToString()));
+                        }
+                        catch (Exception e)
+                        {
+                            result.Add(new Variable() {
+                                Name = i.ToString(),
+                                Presentation = e.Message
+                            });
+                        }
+                        
                     }
                 }
             }

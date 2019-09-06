@@ -312,6 +312,8 @@ namespace ScriptEngine.Machine.Contexts
             }
         }
 
+        public bool IsKeyValueAccessor => false;
+
         [ScriptConstructor]
         public static COMWrapperContext Constructor(IValue[] args)
         {

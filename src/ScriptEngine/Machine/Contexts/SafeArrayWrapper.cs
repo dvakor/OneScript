@@ -98,6 +98,8 @@ namespace ScriptEngine.Machine.Contexts
         {
             get { return _array; }
         }
+
+        public bool IsKeyValueAccessor => false;
     }
 }
 //#endif

@@ -30,6 +30,8 @@ namespace ScriptEngine.Machine.Contexts
             }).ToList();
         }
 
+        public bool IsKeyValueAccessor => false;
+
         public int Count()
         {
             return _frames.Count;

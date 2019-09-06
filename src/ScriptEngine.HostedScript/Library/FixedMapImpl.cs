@@ -33,6 +33,8 @@ namespace ScriptEngine.HostedScript.Library
             }
         }
 
+        public bool IsKeyValueAccessor => true;
+
         public override IValue GetIndexedValue(IValue index)
         {
             if(_map.ContainsKey(index))
