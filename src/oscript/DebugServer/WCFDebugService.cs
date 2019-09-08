@@ -15,8 +15,9 @@ using System.Threading.Tasks;
 using OneScript.DebugProtocol;
 using OneScript.Language;
 using ScriptEngine;
+using ScriptEngine.HostedScript.Library;
 using ScriptEngine.Machine;
-
+using ScriptEngine.Machine.Contexts;
 using StackFrame = OneScript.DebugProtocol.StackFrame;
 using Variable = OneScript.DebugProtocol.Variable;
 
@@ -120,10 +121,16 @@ namespace oscript.DebugServer
             foreach (var step in path)
             {
                 var variable = locals[step];
-                if (HasProperties(variable))
+                var hasProps = HasProperties(variable);
+                var hasIdx = HasIndexedValues(variable);
+                var isComplexObject = hasProps || hasIdx;
+
+                if(isComplexObject)
+                    locals = new List<IVariable>();
+
+                if (hasProps)
                 {
                     var obj = variable.AsObject();
-                    locals = new List<IVariable>();
                     var propsCount = obj.GetPropCount();
                     for (int i = 0; i < propsCount; i++)
                     {
@@ -140,6 +147,30 @@ namespace oscript.DebugServer
 
                     }
                 }
+                if (hasIdx)
+                {
+                    var obj = variable.AsObject();
+                    if(obj is IRuntimeContextInstance inst)
+                    {
+                        if (obj is ICollectionContext cntx)
+                        {
+                            var itemsCount = cntx.Count();
+                            for (int i = 0; i < itemsCount; i++)
+                            {
+                                try
+                                {
+                                    locals.Add(ScriptEngine.Machine.Variable.Create(
+                                        inst.GetIndexedValue(ValueFactory.Create(i)), i.ToString()));
+                                }
+                                catch (Exception e)
+                                {
+                                    locals.Add(ScriptEngine.Machine.Variable.Create(
+                                        ValueFactory.Create(e.Message), i.ToString()));
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             var result = new OneScript.DebugProtocol.Variable[locals.Count];
@@ -148,10 +179,27 @@ namespace oscript.DebugServer
                 result[i] = new OneScript.DebugProtocol.Variable()
                 {
                     Name = locals[i].Name,
-                    IsStructured = HasProperties(locals[i]),
-                    Presentation = locals[i].AsString(),
-                    TypeName = locals[i].SystemType.Name
+                    IsStructured = HasProperties(locals[i]) || HasIndexedValues(locals[i])
                 };
+
+                
+                try
+                {
+                    result[i].Presentation = locals[i].AsString();
+                }
+                catch (Exception e)
+                {
+                    result[i].Presentation = e.Message;
+                }
+                try
+                {
+                    result[i].TypeName = locals[i].SystemType.Name;
+                }
+                catch (Exception e)
+                {
+                    result[i].TypeName = e.Message;
+                }
+                
             }
 
             return result;
@@ -221,6 +269,16 @@ namespace oscript.DebugServer
                 return obj.GetPropCount() > 0;
             }
 
+            return false;
+        }
+
+        private static bool HasIndexedValues(IValue variable)
+        {
+            if (variable.DataType == DataType.Object)
+            {
+                var obj = variable.AsObject();
+                return obj.IsIndexed && !(obj is IEnumerable<KeyAndValueImpl>);
+            }
             return false;
         }
 
