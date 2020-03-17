@@ -180,11 +180,11 @@ namespace DebugServer
             locator.Hydrate(_debugger.Instance);
         }
 
-        public Variable Evaluate(StackFrame frame, string expression)
+        public Variable Evaluate(StackFrame frame, string expression, string context)
         {
             try
             {
-                return _debugger.Instance.Evaluate(frame.ThreadId, frame.Index, expression);
+                return _debugger.Instance.Evaluate(frame.ThreadId, frame.Index, expression, context);
             }
             catch (FaultException e)
             {

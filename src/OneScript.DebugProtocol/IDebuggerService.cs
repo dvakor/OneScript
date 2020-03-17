@@ -66,7 +66,7 @@ namespace OneScript.DebugProtocol
         /// <param name="expression">Выражение</param>
         /// <returns>Переменная с результатом</returns>
         [OperationContract]
-        Variable Evaluate(int threadId, int contextFrame, string expression);
+        Variable Evaluate(int threadId, int contextFrame, string expression, string context);
 
         [OperationContract(IsOneWay = true)]
         void Next(int threadId);

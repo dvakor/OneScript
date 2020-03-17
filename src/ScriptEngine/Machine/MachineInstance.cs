@@ -215,6 +215,69 @@ namespace ScriptEngine.Machine
             _stopManager.Continue();
         }
 
+        public IValue DebuggerEvaluate(string expression, int frameId)
+        {
+            var module = CompileExecutionBatchModule(expression);
+            PrepareCodeStatisticsData(module);
+
+            var frame = new ExecutionFrame();
+            var method = module.Methods[0];
+            frame.MethodName = method.Signature.Name;
+            frame.Locals = new IVariable[method.Variables.Count];
+            frame.InstructionPointer = 0;
+            frame.Module = module;
+            for (int i = 0; i < frame.Locals.Length; i++)
+            {
+                frame.Locals[i] = Variable.Create(ValueFactory.Create(), method.Variables[i]);
+            }
+
+            var mlocals = new Scope();
+            mlocals.Instance = new UserScriptContextInstance(module);
+            mlocals.Methods = TopScope.Methods;
+            mlocals.Variables = _currentFrame.Locals;
+            _scopes.Add(mlocals);
+            frame.ModuleScope = mlocals;
+            frame.ModuleLoadIndex = _scopes.Count - 1;
+
+            try
+            {
+                PushFrame(frame);
+                MainCommandLoop();
+            }
+            finally
+            {
+                PopFrame();
+                _scopes.RemoveAt(_scopes.Count - 1);
+            }
+
+            var varsList = _currentFrame.Locals.ToList();
+
+            foreach (var variable in frame.Locals)
+            {
+                var varIdx = varsList.FindIndex(x => x.Name.Equals(variable.Name));
+
+                if (varIdx < 0)
+                {
+                    varsList.Add(variable);
+                }
+                else
+                {
+                    varsList[varIdx] = Variable.Create(variable.Value, variable.Name);
+                }
+            
+            }
+
+            _currentFrame.Locals = varsList.ToArray();
+
+            return ValueFactory.CreateNullValue();
+
+            //var result = Current._operationStack.Pop();
+            //return result;
+
+            //var result = Current._operationStack.Pop();
+            //return result;
+        }
+
         public IValue Evaluate(string expression, bool separate = false)
         {
             var code = CompileExpressionModule(expression);

@@ -128,7 +128,7 @@ namespace oscript.DebugServer
         public Variable[] GetEvaluatedVariables(string expression, int threadId, int frameIndex, int[] path)
         {
             var machine = Controller.GetTokenForThread(threadId).Machine;
-            var srcVariable = Evaluate(threadId, frameIndex, expression);
+            var srcVariable = Evaluate(threadId, frameIndex, expression, null);
 
             IValue value;
 
@@ -292,12 +292,22 @@ namespace oscript.DebugServer
             }
         }
 
-        public Variable Evaluate(int threadId, int contextFrame, string expression)
+        public Variable Evaluate(int threadId, int contextFrame, string expression, string context)
         {
             try
             {
-                var value = GetMachine(threadId).Evaluate(expression, true);
-                
+                IValue value;
+
+                if (context.Equals("repl", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (expression.StartsWith("="))
+                        value = GetMachine(threadId).Evaluate(expression.Substring(1), true);
+                    else
+                        value = GetMachine(threadId).DebuggerEvaluate(expression, contextFrame);
+                }
+                else
+                    value = GetMachine(threadId).Evaluate(expression, true);
+
                 var variable = CreateDebuggerVariable("$evalResult",
                     value.AsString(), value.SystemType.Name);
 

@@ -420,7 +420,7 @@ namespace DebugServer
             OneScript.DebugProtocol.Variable evalResult;
             try
             {
-                evalResult = _process.Evaluate(frame, expression);
+                evalResult = _process.Evaluate(frame, expression, context);
 
                 if (evalResult.IsStructured)
                 {
