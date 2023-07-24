@@ -5,6 +5,7 @@ was not distributed with this file, You can obtain one
 at http://mozilla.org/MPL/2.0/.
 ----------------------------------------------------------*/
 using System;
+using OneScript.DebugProtocol;
 using OneScript.DebugServices;
 using oscript.DebugServer;
 using ScriptEngine;
@@ -28,6 +29,7 @@ namespace oscript
         
         public override int Execute()
         {
+            Output.ConsoleOutputEncoding = DebuggerSettings.DebugModeEncoding;
             var executor = new ExecuteScriptBehavior(_path, _args);
             SystemLogger.SetWriter(executor);
             switch (ProtocolType)
